@@ -1,64 +1,105 @@
-import express from "express";
 import dotenv from "dotenv";
-import basicAuth from "express-basic-auth";
-
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import Anthropic from "@anthropic-ai/sdk";
 
 dotenv.config();
 
 const app = express();
+app.use(express.json());
 
-app.use(express.json({ limit: "50kb" }));
-app.use(
-  basicAuth({
-    users: { [process.env.BASIC_AUTH_USER]: process.env.BASIC_AUTH_PASS },
-    challenge: true
-  })
-);
-app.use(express.static("public"));
+// ===== ES Module __dirname Fix =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const SYSTEM_PERSONA = `
-Du bist eine Lehr-Persona für Studierende. Antworte freundlich, klar und hilfreich.
-Erkläre zuerst kurz, gib dann ein kleines Beispiel.
-`;
+// ===== Optional: Basic Auth (einfach & sicher) =====
+const BASIC_USER = process.env.BASIC_AUTH_USER;
+const BASIC_PASS = process.env.BASIC_AUTH_PASS;
 
+console.log("AUTH USER =", BASIC_USER);
+console.log("AUTH PASS =", BASIC_PASS);
+
+app.post("/api/login", (req, res) => {
+  const { user, pass } = req.body || {};
+
+  const BASIC_USER = process.env.BASIC_AUTH_USER;
+  const BASIC_PASS = process.env.BASIC_AUTH_PASS;
+
+  if (!BASIC_USER || !BASIC_PASS) {
+    return res.status(500).json({ error: "BASIC_AUTH_USER/PASS not set" });
+  }
+
+  if (user === BASIC_USER && pass === BASIC_PASS) {
+    return res.json({ ok: true });
+  }
+
+  return res.status(401).json({ error: "Invalid credentials" });
+});
+
+
+if (BASIC_USER && BASIC_PASS) {
+  app.use((req, res, next) => {
+    const auth = req.headers.authorization;
+
+    if (!auth || !auth.startsWith("Basic ")) {
+      res.setHeader("WWW-Authenticate", "Basic");
+      return res.status(401).send("Authentication required");
+    }
+
+    const base64 = auth.split(" ")[1];
+    const [user, pass] = Buffer.from(base64, "base64")
+      .toString()
+      .split(":");
+
+    if (user !== BASIC_USER || pass !== BASIC_PASS) {
+      return res.status(403).send("Access denied");
+    }
+
+    next();
+  });
+}
+
+// ===== Static Frontend =====
+app.use(express.static(path.join(__dirname, "public")));
+
+// ===== Claude Client =====
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.warn("⚠️ ANTHROPIC_API_KEY is not set");
+}
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+// ===== API: Frontend → Backend → Claude =====
 app.post("/api/chat", async (req, res) => {
   try {
-    const message = req.body?.message;
-    if (typeof message !== "string" || !message.trim()) {
-      return res.status(400).json({ error: "message missing" });
+    const { prompt, max_tokens } = req.body || {};
+
+    if (!prompt || typeof prompt !== "string") {
+      return res.status(400).json({ error: "Missing prompt" });
     }
 
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-latest",
-        max_tokens: 600,
-        system: SYSTEM_PERSONA,
-        messages: [{ role: "user", content: message }]
-      })
+    const model =
+      process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
+
+    const msg = await anthropic.messages.create({
+      model,
+      max_tokens: Number.isFinite(max_tokens) ? max_tokens : 500,
+      messages: [{ role: "user", content: prompt }],
     });
 
-    if (!resp.ok) {
-      const text = await resp.text();
-      return res.status(resp.status).json({ error: "Claude API error", details: text });
-    }
-
-    const data = await resp.json();
-    const reply = Array.isArray(data.content)
-      ? data.content.filter(x => x.type === "text").map(x => x.text).join("")
-      : "";
-
-    res.json({ reply });
-  } catch (e) {
-    res.status(500).json({ error: "server error", details: String(e) });
+    const text = msg?.content?.[0]?.text || "";
+    res.json({ text });
+  } catch (err) {
+    console.error("Claude error:", err);
+    res.status(500).json({ error: "Claude request failed" });
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server läuft auf http://localhost:3000");
+// ===== Start Server =====
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`✅ Server läuft auf http://localhost:${port}`);
 });
