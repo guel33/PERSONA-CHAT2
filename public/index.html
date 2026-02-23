@@ -1,923 +1,842 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Hospital: Strategisches Management-Lernspiel</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #6366f1;
-            --secondary: #8b5cf6;
-            --accent: #ec4899;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --border: #334155;
-            --shadow: rgba(0, 0, 0, 0.3);
-            --glow: rgba(99, 102, 241, 0.5);
-        }
-
-        body {
-            font-family: 'Work Sans', 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        header {
-            background: linear-gradient(135deg, rgba(99, 102, 241, .9) 0%, rgba(139, 92, 246, .9) 100%);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 2rem;
-            border-radius: 16px;
-            margin-bottom: 2rem;
-        }
-
-        .header-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-            align-items: start;
-        }
-
-        .header-left h1 {
-            font-family: 'Bitter', serif;
-            font-size: 2.5rem;
-            margin-bottom: .5rem;
-            font-weight: 700;
-        }
-
-        .header-left .subtitle {
-            opacity: .9;
-            font-size: 1.1rem;
-            font-weight: 300;
-        }
-
-        .phase-indicator {
-            display: flex;
-            gap: .5rem;
-            margin: 1.5rem 0;
-            flex-wrap: wrap;
-        }
-
-        .phase-step {
-            flex: 1;
-            min-width: 120px;
-            padding: 1rem .75rem;
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            text-align: center;
-            font-size: .9rem;
-            font-weight: 600;
-            transition: all .3s cubic-bezier(.4, 0, .2, 1);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .phase-step::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left .5s;
-        }
-
-        .phase-step:hover::before {
-            left: 100%;
-        }
-
-        .phase-step:hover {
-            background: rgba(99, 102, 241, 0.3);
-            transform: translateY(-3px);
-            border-color: rgba(99, 102, 241, 0.5);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .phase-step.active {
-            background: linear-gradient(135deg, rgba(99, 102, 241, .9) 0%, rgba(139, 92, 246, .9) 100%);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            font-weight: 700;
-        }
-
-        .phase-step.completed {
-            background: rgba(16, 185, 129, 0.2);
-            border-color: var(--success);
-        }
-
-        .phase-step.completed:hover {
-            background: rgba(16, 185, 129, 0.3);
-        }
-
-        .card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            transition: all .3s cubic-bezier(.4, 0, .2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-            transition: left .5s;
-        }
-
-        .card:hover::before {
-            left: 100%;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 40px rgba(99, 102, 241, 0.2);
-        }
-
-        .card h2 {
-            font-family: 'Bitter', serif;
-            color: transparent;
-            background: linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            margin-bottom: 1rem;
-            font-size: 2rem;
-            font-weight: 700;
-            text-shadow: 0 0 30px rgba(165, 180, 252, 0.3);
-        }
-
-        .case-study {
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
-            border-left: 4px solid var(--warning);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            border: 1px solid rgba(251, 191, 36, 0.2);
-        }
-
-        .case-study h3 {
-            color: var(--warning);
-            margin-bottom: .75rem;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .npc-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .npc-card {
-            background: var(--bg-main);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            cursor: pointer;
-            transition: all .3s ease;
-            text-align: center;
-        }
-
-        .npc-card:hover {
-            border-color: var(--secondary);
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-
-        .npc-card.selected {
-            border-color: var(--accent);
-            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
-            color: white;
-        }
-
-        .npc-card.recommended {
-            border-color: var(--warning);
-            background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
-            color: #111827;
-            position: relative;
-        }
-
-        .recommendation-box {
-            background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
-            border-left: 4px solid #2196f3;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            animation: slideIn .5s ease;
-            color: #111827;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .recommendation-box strong {
-            color: #1976d2;
-        }
-
-        .npc-icon {
-            font-size: 2.5rem;
-            margin-bottom: .5rem;
-        }
-
-        .npc-name {
-            font-weight: 600;
-            margin-bottom: .25rem;
-        }
-
-        .npc-role {
-            font-size: .85rem;
-            color: var(--text-secondary);
-        }
-
-        .interview-section {
-            display: none;
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            background: var(--bg-main);
-            border-radius: 8px;
-            border: 2px solid var(--accent);
-        }
-
-        .interview-section.active {
-            display: block;
-            animation: fadeIn .3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .question-input {
-            width: 100%;
-            padding: .75rem;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            font-size: 1rem;
-            font-family: 'Work Sans', sans-serif;
-            margin-bottom: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-        }
-
-        .question-input:focus {
-            outline: none;
-            border-color: var(--secondary);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .btn {
-            padding: .875rem 1.75rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all .3s cubic-bezier(.4, 0, .2, 1);
-            font-family: 'Work Sans', sans-serif;
-            position: relative;
-            overflow: hidden;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width .6s, height .6s;
-        }
-
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4), 0 0 20px rgba(99, 102, 241, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-primary:disabled {
-            opacity: .4;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn-secondary {
-            background: rgba(30, 41, 59, 0.8);
-            color: var(--text-primary);
-            border: 2px solid rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.1);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-        }
-
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-        }
-
-        .response-box {
-            margin-top: 1rem;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-            border-left: 4px solid var(--primary);
-            border-radius: 12px;
-            display: none;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
-        .response-box.active {
-            display: block;
-            animation: fadeIn .3s ease, glow 2s infinite;
-        }
-
-        @keyframes glow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 5px rgba(99, 102, 241, 0.2);
-            }
-
-            50% {
-                box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-            }
-        }
-
-        .response-box strong {
-            color: var(--primary);
-        }
-
-        .kpi-dashboard {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 16px var(--shadow);
-        }
-
-        .kpi-list {
-            list-style: none;
-        }
-
-        .kpi-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: .75rem;
-            margin-bottom: .5rem;
-            background: var(--bg-main);
-            border-radius: 6px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .kpi-dashboard .kpi-item {
-            background: rgba(255, 255, 255, 0.1);
-            border-left-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .kpi-dashboard .kpi-name,
-        .kpi-dashboard .kpi-value {
-            color: white;
-        }
-
-        .kpi-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .kpi-value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--secondary);
-        }
-
-        .kpi-change {
-            font-size: .85rem;
-            margin-left: .5rem;
-        }
-
-        .kpi-change.positive {
-            color: #27ae60;
-        }
-
-        .kpi-change.negative {
-            color: var(--danger);
-        }
-
-        .kpi-input-group {
-            display: flex;
-            gap: .5rem;
-            margin-bottom: .5rem;
-        }
-
-        .kpi-input {
-            flex: 1;
-            padding: .5rem;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            font-size: .9rem;
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .exploration-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-
-        .repository-panel {
-            background: var(--bg-main);
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px solid var(--accent);
-        }
-
-        .exploration-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px var(--shadow);
-        }
-
-        .exploration-table thead {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-        }
-
-        .exploration-table th {
-            padding: .75rem .5rem;
-            text-align: left;
-            font-weight: 600;
-            font-size: .85rem;
-        }
-
-        .exploration-table td {
-            padding: .25rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: top;
-        }
-
-        .table-textarea {
-            width: 100%;
-            min-height: 50px;
-            padding: .4rem;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: .85rem;
-            font-family: 'Work Sans', sans-serif;
-            resize: vertical;
-            transition: border-color .2s ease;
-        }
-
-        .table-textarea:focus {
-            outline: none;
-            border-color: var(--secondary);
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            vertical-align: middle;
-            margin-right: .5rem;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @media (max-width:1200px) {
-            .exploration-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width:1024px) {
-            .header-content {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KI in der radiologischen Diagnostik – Strategisches Lernspiel</title>
+
+  <!--
+    KOMPLETT-ERSATZDATEI (index.html)
+    - Behält dein "großes" Layout (Header + 3 Phasen + Dozenten-Panel) bei
+    - Fügt ein Studierenden-Login davor ( /api/login )
+    - Alle KI-Aufrufe laufen über dein Backend ( /api/chat ) -> KEIN API-Key im Browser
+    - Stark kommentiert, damit du verstehst was passiert
+
+    Hinweis:
+    In deiner ursprünglichen großen HTML waren die Templates als Base64 eingebettet (sehr groß).
+    Damit du hier alles direkt kopieren kannst, ist die Template-Liste unten als "Metadaten" enthalten.
+    Wenn du wieder echte Downloads willst, kannst du pro Template ein "b64" Feld ergänzen (siehe Kommentar im Code).
+  -->
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root{
+      --primary:#6366f1; --secondary:#8b5cf6; --accent:#ec4899;
+      --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+      --bg-main:#0f172a; --bg-card:#1e293b;
+      --text-primary:#f1f5f9; --text-secondary:#cbd5e1;
+      --border:#334155; --shadow:rgba(0,0,0,0.3); --glow:rgba(99,102,241,0.5);
+    }
+
+    body{
+      font-family:'Work Sans','Inter',sans-serif;
+      background: linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%);
+      color:var(--text-primary); line-height:1.6; min-height:100vh;
+      position:relative; overflow-x:hidden;
+    }
+    body::before{
+      content:''; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+      pointer-events:none; z-index:0;
+    }
+
+    .container{ max-width:1400px; margin:0 auto; padding:2rem; position:relative; z-index:1; }
+
+    header{
+      background: linear-gradient(135deg, rgba(99,102,241,.9) 0%, rgba(139,92,246,.9) 100%);
+      backdrop-filter: blur(10px);
+      border:2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 20px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+      color:white; padding:2rem; border-radius:16px; margin-bottom:2rem;
+    }
+
+    .header-content{ display:grid; grid-template-columns:1fr; gap:1.25rem; align-items:start; }
+    .header-left h1{ font-family:'Bitter',serif; font-size:2.5rem; margin-bottom:.5rem; font-weight:700; }
+    .header-left .subtitle{ opacity:.9; font-size:1.1rem; font-weight:300; }
+
+    .phase-indicator{ display:flex; gap:.5rem; margin:1.5rem 0 0; flex-wrap:wrap; }
+    .phase-step{
+      flex:1; min-width:120px; padding:1rem .75rem;
+      background:rgba(30,41,59,0.6); backdrop-filter: blur(10px);
+      border-radius:12px; text-align:center; font-size:.9rem; font-weight:600;
+      transition:all .3s cubic-bezier(.4,0,.2,1);
+      border:2px solid rgba(255,255,255,0.1); cursor:pointer; position:relative; overflow:hidden;
+      user-select:none;
+    }
+    .phase-step::before{
+      content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition:left .5s;
+    }
+    .phase-step:hover::before{ left:100%; }
+    .phase-step:hover{
+      background:rgba(99,102,241,0.3);
+      transform: translateY(-3px);
+      border-color:rgba(99,102,241,0.5);
+      box-shadow:0 8px 20px rgba(99,102,241,0.3);
+    }
+    .phase-step.active{
+      background: linear-gradient(135deg, rgba(99,102,241,.9) 0%, rgba(139,92,246,.9) 100%);
+      color:white; border-color:rgba(255,255,255,0.3);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(99,102,241,0.5), 0 0 30px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+      font-weight:700;
+    }
+    .phase-step.completed{ background:rgba(16,185,129,0.2); border-color:var(--success); }
+
+    .card{
+      background: linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(51,65,85,0.95) 100%);
+      backdrop-filter: blur(10px);
+      border-radius:16px; padding:2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+      transition:all .3s cubic-bezier(.4,0,.2,1);
+      position:relative; overflow:hidden;
+    }
+    .card h2{
+      font-family:'Bitter',serif;
+      color:transparent;
+      background: linear-gradient(135deg,#a5b4fc 0%,#c4b5fd 100%);
+      background-clip:text; -webkit-background-clip:text;
+      margin-bottom:1rem; font-size:2rem; font-weight:700;
+      text-shadow:0 0 30px rgba(165,180,252,0.3);
+    }
+
+    .npc-grid{ display:grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap:1rem; margin-top:1rem; }
+    .npc-card{
+      background:var(--bg-main);
+      border:2px solid var(--border);
+      border-radius:12px; padding:1.25rem 1rem;
+      cursor:pointer; transition:all .3s ease; text-align:center;
+    }
+    .npc-card:hover{ border-color:var(--secondary); transform:translateY(-3px); box-shadow:0 6px 20px rgba(139,92,246,0.3); }
+    .npc-card.selected{
+      border-color:var(--accent);
+      background: linear-gradient(135deg, rgba(236,72,153,0.15) 0%, rgba(139,92,246,0.15) 100%);
+      box-shadow:0 0 20px rgba(236,72,153,0.3);
+    }
+    .npc-avatar{ font-size:2.5rem; margin-bottom:.5rem; }
+    .npc-name{ font-weight:600; margin-bottom:.25rem; font-size:.9rem; }
+    .npc-role{ font-size:.8rem; color:var(--text-secondary); line-height:1.4; word-break:break-word; }
+
+    .interview-section{
+      display:none; margin-top:1.5rem; padding:1.5rem;
+      background:var(--bg-main); border-radius:8px; border:2px solid var(--accent);
+    }
+    .interview-section.active{ display:block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+    .question-input{
+      width:100%; padding:.75rem;
+      border:2px solid var(--border); border-radius:10px;
+      font-size:1rem; font-family:'Work Sans',sans-serif; margin-bottom:1rem;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-primary);
+    }
+    .question-input:focus{ outline:none; border-color:var(--secondary); background: rgba(255,255,255,0.08); }
+
+    .btn{
+      padding:.875rem 1.75rem; border:none; border-radius:12px;
+      font-size:1rem; font-weight:600; cursor:pointer;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      font-family:'Work Sans',sans-serif; position:relative; overflow:hidden;
+      text-transform:uppercase; letter-spacing:.5px;
+      user-select:none;
+    }
+    .btn::before{
+      content:''; position:absolute; top:50%; left:50%; width:0; height:0; border-radius:50%;
+      background:rgba(255,255,255,0.3); transform:translate(-50%,-50%);
+      transition: width .6s, height .6s;
+    }
+    .btn:hover::before{ width:300px; height:300px; }
+
+    .btn-primary{
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color:white;
+      box-shadow: 0 4px 15px rgba(99,102,241,0.4), 0 0 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .btn-primary:hover{
+      transform:translateY(-3px);
+      box-shadow: 0 8px 25px rgba(99,102,241,0.5), 0 0 30px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .btn-primary:disabled{ opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .btn-secondary{
+      background:rgba(30,41,59,0.8);
+      color:var(--text-primary);
+      border:2px solid rgba(99,102,241,0.3);
+    }
+    .btn-secondary:hover{
+      border-color:var(--primary);
+      background:rgba(99,102,241,0.1);
+      box-shadow:0 0 20px rgba(99,102,241,0.2);
+    }
+
+    .btn-small { padding: 0.5rem 1rem; font-size: 0.85rem; }
+
+    .response-box{
+      margin-top:1rem; padding:1.5rem;
+      background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,92,246,0.05) 100%);
+      border-left:4px solid var(--primary);
+      border-radius:12px;
+      display:none;
+      border:1px solid rgba(99,102,241,0.2);
+      white-space: pre-wrap;
+    }
+    .response-box.active{ display:block; animation: fadeIn .3s ease, glow 2s infinite; }
+    @keyframes glow{
+      0%,100%{ box-shadow:0 0 5px rgba(99,102,241,0.2); }
+      50%{ box-shadow:0 0 20px rgba(99,102,241,0.4); }
+    }
+    .response-box strong{ color:var(--primary); }
+
+    .hidden{ display:none !important; }
+
+    .loading{
+      display:inline-block; width:20px; height:20px;
+      border:3px solid rgba(255,255,255,0.3);
+      border-radius:50%;
+      border-top-color:white;
+      animation: spin 1s ease-in-out infinite;
+      vertical-align: middle;
+      margin-right: .5rem;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
+
+    @media (max-width:768px){
+      .container{ padding:1rem; }
+      .header-left h1{ font-size:1.8rem; }
+    }
+
+    /* =========================
+       STUDIERENDEN-LOGIN OVERLAY
+       ========================= */
+    #loginOverlay{
+      position:fixed; inset:0; z-index:9999;
+      display:flex; align-items:center; justify-content:center;
+      padding: 20px;
+      background: rgba(0,0,0,.60);
+      backdrop-filter: blur(10px);
+    }
+    #loginCard{
+      width:min(560px, 94vw);
+      background: linear-gradient(135deg, rgba(30,41,59,0.98) 0%, rgba(51,65,85,0.98) 100%);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px;
+      padding: 1.75rem;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+    }
+    #loginCard h2{
+      font-family:'Bitter',serif;
+      margin-bottom:.35rem;
+      font-size:1.6rem;
+      background: linear-gradient(135deg,#a5b4fc 0%,#c4b5fd 100%);
+      background-clip:text; -webkit-background-clip:text; color:transparent;
+    }
+    #loginCard p{ color: var(--text-secondary); margin-bottom: 1rem; }
+    .login-label{
+      display:block; font-size:.85rem;
+      color: var(--text-secondary);
+      margin:.8rem 0 .35rem;
+    }
+    .login-error{ color: var(--danger); margin-top:.75rem; display:none; font-size:.9rem; }
+
+    /* =========================
+       DOZENTEN-BEREICH (wie bei dir)
+       ========================= */
+    .dozent-toggle-bar{ position:fixed; bottom:2rem; right:2rem; z-index:100; }
+    .btn-dozent{
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: rgba(255,255,255,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: .6rem 1.2rem;
+      border-radius: 20px;
+      font-size:.8rem; cursor:pointer;
+      transition: all .3s;
+      font-family:'Work Sans',sans-serif;
+      letter-spacing:.5px;
+    }
+    .btn-dozent:hover{
+      color:rgba(255,255,255,0.8);
+      border-color:rgba(255,255,255,0.3);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .dozent-panel{
+      position:fixed; top:0; right:0; width:560px; height:100vh;
+      background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+      border-left: 2px solid rgba(99,102,241,0.4);
+      box-shadow: -8px 0 40px rgba(0,0,0,0.6);
+      z-index:200; overflow-y:auto;
+      transform: translateX(100%);
+      transition: transform .4s cubic-bezier(.4,0,.2,1);
+      padding:2rem;
+    }
+    .dozent-panel.open{ transform: translateX(0); }
+
+    .dozent-header{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:1.5rem; padding-bottom:1rem;
+      border-bottom:1px solid rgba(99,102,241,0.3);
+    }
+    .dozent-header h2{
+      font-family:'Bitter',serif;
+      background: linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%);
+      background-clip:text; -webkit-background-clip:text; color:transparent;
+      font-size:1.4rem;
+    }
+    .btn-close-dozent{
+      background:none; border:none; color:var(--text-secondary);
+      font-size:1.4rem; cursor:pointer; padding:.25rem .5rem;
+      border-radius:6px; transition:all .2s;
+    }
+    .btn-close-dozent:hover{ background:rgba(255,255,255,0.1); color:white; }
+
+    .dozent-login{ text-align:center; padding:2rem 0; }
+    .dozent-login p{ color:var(--text-secondary); margin-bottom:1.5rem; font-size:.95rem; }
+    .dozent-pw-input{
+      width:100%; padding:.75rem 1rem;
+      background:rgba(255,255,255,0.05);
+      border:2px solid rgba(99,102,241,0.3);
+      border-radius:10px; color:white;
+      font-size:1rem; font-family:'Work Sans',sans-serif;
+      margin-bottom:1rem; text-align:center; letter-spacing:.3em;
+    }
+    .dozent-pw-input:focus{ outline:none; border-color:var(--primary); }
+    .dozent-pw-error{ color:var(--danger); font-size:.85rem; margin-top:.5rem; display:none; }
+
+    .dozent-content{ display:none; }
+    .dozent-content.visible{ display:block; }
+
+    .template-gallery{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap:1.25rem; margin-top:1.5rem;
+    }
+    .template-card{
+      background: linear-gradient(135deg, rgba(30,41,59,0.98) 0%, rgba(51,65,85,0.98) 100%);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:14px; overflow:hidden;
+      transition:all .3s cubic-bezier(.4,0,.2,1);
+      display:flex; flex-direction:column;
+    }
+    .template-card:hover{
+      transform:translateY(-5px);
+      border-color:rgba(99,102,241,0.5);
+      box-shadow:0 12px 40px rgba(0,0,0,0.4), 0 0 30px rgba(99,102,241,0.2);
+    }
+    .template-thumb{
+      width:100%; aspect-ratio:16/9; overflow:hidden;
+      background:#0f172a; position:relative;
+      display:flex; align-items:center; justify-content:center;
+      font-size:2.5rem;
+    }
+    .template-card-body{
+      padding:1rem; flex:1; display:flex; flex-direction:column; gap:.5rem;
+    }
+    .template-card-title{
+      font-family:'Bitter',serif; font-size:1rem; font-weight:700;
+      color:#e2e8f0;
+    }
+    .template-card-desc{
+      font-size:.8rem; color:var(--text-secondary); line-height:1.5; flex:1;
+    }
+    .template-no-file{
+      width:100%; padding:.6rem 1rem;
+      background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3);
+      color:var(--warning); border-radius:8px; font-size:.82rem; text-align:center;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-content">
-                <div class="header-left">
-                    <h1>🏥 Smart Hospital: St. Michael Klinikum München</h1>
-                    <p class="subtitle">Strategisches Management-Lernspiel zur digitalen Transformation in der
-                        Radiologie</p>
-                    <div class="phase-indicator">
-                        <div class="phase-step active" data-phase="0" onclick="goToPhase(0)">📋 Fallbeispiel</div>
-                        <div class="phase-step" data-phase="1" onclick="goToPhase(1)">🔍 Exploration</div>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <div class="kpi-dashboard"
-                        style="background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); margin-bottom: 1rem;">
-                        <h3
-                            style="color: white; border-bottom: 2px solid rgba(255, 255, 255, 0.3); padding-bottom: 0.75rem; margin-bottom: 1rem;">
-                            📊 KPI-Dashboard</h3>
-                        <div class="kpi-creator" style="margin: 1rem 0;">
-                            <div class="kpi-input-group"> <input type="text" class="kpi-input" id="kpiName"
-                                    placeholder="KPI eingeben (z.B. Wartezeit, Befunddauer, Genauigkeit, Zufriedenheit)"
-                                    style="flex:1;" /> <button class="btn btn-secondary btn-small" onclick="addKPI()"
-                                    style="background:white; color: var(--primary);">+</button> </div>
-                        </div>
-                        <ul class="kpi-list" id="kpiListHeader" style="margin-top: 1rem;"></ul>
-                    </div>
-                </div>
-            </div>
-        </header> <!-- Phase 0 -->
-        <div id="phase0" class="phase-content">
-            <div class="card">
-                <h2>📋 Ihre Mission</h2>
-                <div class="case-study">
-                    <h3>St. Michael Klinikum München - Ausgangssituation</h3>
-                    <p>Sie wurden als Projektleiter/in für die Smart-Hospital-Transformation berufen. Die
-                        Geschäftsführung hat die Radiologie als Leuchtturm-Abteilung ausgewählt, um die digitale
-                        Transformation sichtbar und kontrolliert zu starten.</p>
-                </div>
-                <h3 style="margin-top: 2rem;">🏨 Krankenhausprofil</h3>
-                <p style="line-height: 1.8; margin-bottom: 1.5rem;"> Das <strong>St. Michael Klinikum München</strong>
-                    ist ein großes Allgemeinkrankenhaus mit rund <strong>500 Betten</strong> und zentralen
-                    Fachabteilungen wie Thoraxchirurgie, Onkologie und Neurologie. Das Krankenhaus beschäftigt etwa
-                    1.200 Mitarbeitende und versorgt jährlich tausende Patienten in der Region München. </p>
-                <h3>🚀 Zukunftsvision</h3>
-                <p style="line-height: 1.8; margin-bottom: 1.5rem;"> Das St. Michael Klinikum strebt danach, ein
-                    <strong>Vorreiter für digitale Medizin</strong> zu sein, in dem Innovation und modernste Technik den
-                    Alltag prägen. Die Geschäftsführung hat beschlossen, mit der Radiologie zu beginnen - einem Bereich,
-                    der eine hohe Relevanz für nahezu alle Fachabteilungen hat und dadurch als natürlicher Multiplikator
-                    wirkt. </p>
-                <h3>💡 Radiologie als Leuchtturm</h3>
-                <p style="line-height: 1.8; margin-bottom: 1.5rem;"> Die Radiologie wurde gezielt als Pilotbereich
-                    gewählt, um die Smart-Hospital-Transformation <strong>sichtbar und kontrolliert zu starten</strong>.
-                    Sie hat eine hohe Relevanz für nahezu alle Fachabteilungen und wirkt dadurch als natürlicher
-                    Multiplikator. Die Abteilung ist <strong>organisatorisch klar abgegrenzt</strong> und erlaubt die
-                    Erprobung neuer Technologien ohne Risiken für den gesamten Klinikbetrieb. Gewonnene Erkenntnisse
-                    können anschließend auf weitere Fachbereiche übertragen werden. </p>
-                <h3>🎯 Ihre Mission</h3>
-                <p style="line-height: 1.8; margin-bottom: 1.5rem;"> Das Klinikum hat eine Förderzusage im Rahmen des
-                    Krankenhauszukunftsgesetzes (KHZG) erhalten. <strong>Für das Projekt steht ein Budget von 2,5
-                        Millionen Euro zur Verfügung.</strong> Der Zeitrahmen bis zum geplanten Go-Live beträgt 18
-                    Monate. Der Vorstand erwartet messbare Effizienzsteigerungen und Qualitätsverbesserungen, die
-                    regelmäßig in Form von KPIs berichtet werden sollen. </p>
-                <p style="line-height: 1.8; margin-bottom: 1.5rem;"> Aktuell arbeitet die Radiologie mit einem
-                    PACS-System (Picture Archiving and Communication System), das nicht KI-fähig ist. Die radiologischen
-                    Befunde werden manuell erstellt. Die Radiologinnen und Radiologen sind durch hohes Aufkommen und
-                    Fachkräftemangel stark belastet. Die Einhaltung der DSGVO, des Medizinprodukterechts sowie aller
-                    medizinrechtlichen Anforderungen ist für das Projekt zwingend erforderlich. </p>
-                <p style="line-height: 1.8; margin-bottom: 1.5rem;"> <strong>Ihre Aufgabe:</strong> Entwickeln Sie eine
-                    fundierte Strategie für die digitale Transformation der Radiologie. Beginnen Sie mit der Exploration
-                    - befragen Sie Stakeholder, sammeln Sie Informationen und identifizieren Sie kritische
-                    Erfolgsfaktoren. </p>
-                <div class="case-study" style="border-left-color:#2196f3; background: rgba(33,150,243,0.08);">
-                    <strong>💡 Hinweis:</strong> Definieren Sie im KPI-Dashboard oben rechts die Kennzahlen, die Sie
-                    während des Projekts verfolgen möchten. Die NPC-Interviews werden von Claude-API powered Personas
-                    beantwortet. </div> <button class="btn btn-primary" onclick="startGame()" style="margin-top: 1rem;">
-                    Projekt starten und Exploration beginnen → </button>
-            </div>
-        </div> <!-- Phase 1 -->
-        <div id="phase1" class="phase-content hidden">
-            <div class="card">
-                <h2>🔍 Phase 1: Exploration - Stakeholder befragen</h2>
-                <p>Befragen Sie relevante Personen im Klinikum, um fehlende Informationen zu sammeln. Die Antworten
-                    werden von Claude-AI powered Personas generiert.</p> <button class="btn btn-secondary"
-                    onclick="toggleRepository()" style="margin: 1rem 0 1.5rem;"> <span
-                        id="repositoryToggleIcon">▶</span> Exploration-Repository öffnen </button>
-                <div id="recommendationContainer"></div>
-                <div class="exploration-layout"> <!-- Repository Panel -->
-                    <div id="repositoryPanel" class="repository-panel hidden">
-                        <div
-                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                            <h3 style="margin:0;">📋 Exploration-Repository</h3>
-                            <div style="display:flex; gap:0.5rem;"> <button class="btn btn-secondary btn-small"
-                                    onclick="addExplorationRow()">+ Zeile</button> </div>
-                        </div>
-                        <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
-                            <table class="exploration-table" id="explorationTable">
-                                <thead>
-                                    <tr>
-                                        <th>Was wissen wir?</th>
-                                        <th>Welche Informationen fehlen?</th>
-                                        <th>Wen sollten wir fragen?</th>
-                                        <th>Antworten/Erkenntnisse</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="explorationTableBody">
-                                    <tr>
-                                        <td><textarea class="table-textarea" placeholder="z.B. 18 Monate bis Go-Live"
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                        <td><textarea class="table-textarea"
-                                                placeholder="z.B. Wie ist die IT-Infrastruktur?"
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                        <td><textarea class="table-textarea" placeholder="z.B. IT-Leiter"
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                        <td><textarea class="table-textarea" placeholder="Notizen..."
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                    </tr>
-                                    <tr>
-                                        <td><textarea class="table-textarea" placeholder="z.B. KHZG-Förderung erhalten"
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                        <td><textarea class="table-textarea"
-                                                placeholder="z.B. Wie steht das Personal zur KI?"
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                        <td><textarea class="table-textarea" placeholder="z.B. Radiologie-Team"
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                        <td><textarea class="table-textarea" placeholder="Notizen..."
-                                                oninput="saveRepositoryData()"></textarea></td>
-                                    </tr>
-                                    <tr>
-                                        <td><textarea class="table-textarea" oninput="saveRepositoryData()"></textarea>
-                                        </td>
-                                        <td><textarea class="table-textarea" oninput="saveRepositoryData()"></textarea>
-                                        </td>
-                                        <td><textarea class="table-textarea" oninput="saveRepositoryData()"></textarea>
-                                        </td>
-                                        <td><textarea class="table-textarea" oninput="saveRepositoryData()"></textarea>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div> <!-- Stakeholders Panel -->
-                    <div class="stakeholders-panel">
-                        <h3 style="margin-bottom: 1rem;">💬 Stakeholder befragen</h3>
-                        <div class="npc-grid" id="npcGrid"></div>
-                        <div class="interview-section" id="interviewSection">
-                            <h3>💬 Interview mit: <span id="currentNPCName"></span></h3>
-                            <p style="color: var(--text-secondary); margin-bottom: 1rem;"><em id="currentNPCRole"></em>
-                            </p> <textarea class="question-input" id="questionInput"
-                                placeholder="Stellen Sie Ihre Frage..."></textarea> <button class="btn btn-primary"
-                                onclick="askQuestion()" id="askBtn">Frage stellen</button>
-                            <div class="response-box" id="responseBox"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- ========================= STUDIERENDEN-LOGIN ========================= -->
+  <div id="loginOverlay">
+    <div id="loginCard">
+      <h2>🔐 Login</h2>
+      <p>Bitte melde dich an, um das Lernspiel zu starten.</p>
+
+      <label class="login-label" for="loginUser">Benutzername</label>
+      <input id="loginUser" class="question-input" placeholder="z.B. admin" autocomplete="username" />
+
+      <label class="login-label" for="loginPass">Passwort</label>
+      <input id="loginPass" class="question-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+      <button id="loginBtn" class="btn btn-primary" style="width:100%;" onclick="handleLogin()">
+        Anmelden
+      </button>
+
+      <div id="loginError" class="login-error">Zugriff verweigert – bitte probier’s nochmal.</div>
+
+      <p style="margin-top:1rem; font-size:.8rem; opacity:.75;">
+        Hinweis: Zugangsdaten stehen im Server in deiner <code>.env</code> als <code>APP_USER</code>/<code>APP_PASS</code>.
+      </p>
     </div>
-<script>
-/* =========================
-   GAME STATE
-========================= */
-let gameState = {
-  currentPhase: 0,
-  currentNPC: null
-};
+  </div>
 
-/* =========================
-   STAKEHOLDER (NPCs)
-========================= */
-const NPCS = [
-  { id: 1, name: "Frau Dr. Karin Klein", role: "Geschäftsführung", icon: "👩‍💼" },
-  { id: 2, name: "Dr. Martin Bauer", role: "IT-Leiter", icon: "👨‍💻" },
-  { id: 3, name: "Prof. Dr. Marcus Feldner", role: "Chefarzt Radiologie", icon: "👨‍⚕️" },
-  { id: 4, name: "Dr. Thomas Weber", role: "Datenschutzbeauftragter", icon: "🔒" }
-];
+  <!-- ========================= APP (erst nach Login sichtbar) ========================= -->
+  <div id="appRoot" class="container" style="display:none;">
+    <header>
+      <div class="header-content">
+        <div class="header-left">
+          <h1>Einsatz von KI in der radiologischen Diagnostik</h1>
+          <p class="subtitle">Strategisches Transformationsprojekt</p>
 
-/* =========================
-   PHASE NAVIGATION
-========================= */
-async function startGame() {
-  if (!sessionStorage.getItem("loggedIn")) {
-    const user = prompt("Benutzername:");
-    const pass = prompt("Passwort:");
+          <div class="phase-indicator">
+            <div class="phase-step active" data-phase="0" onclick="goToPhase(0)">📋 Fallbeispiel</div>
+            <div class="phase-step" data-phase="1" onclick="goToPhase(1)">🎤 Stakeholder</div>
+            <div class="phase-step" data-phase="2" onclick="goToPhase(2)">📁 Templates</div>
+          </div>
 
-    const r = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user, pass }),
-    });
+          <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
+            <button class="btn btn-secondary btn-small" onclick="logoutStudent()" title="Abmelden (nur dieser Tab)">
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    if (!r.ok) {
-      alert("Zugriff verweigert");
-      return;
+    <!-- Phase 0 -->
+    <div id="phase0" class="phase-content">
+      <div class="card">
+        <h2>📋 Fallbeispiel</h2>
+
+        <h3 style="margin-top: 2rem;">🏨 Ausgangssituation</h3>
+        <p style="line-height: 1.8; margin-bottom: 1.5rem;">
+          Das <strong>St. Michael Klinikum München</strong> ist ein großes Allgemeinkrankenhaus mit rund <strong>500 Betten</strong> und etwa <strong>1.200 Mitarbeitenden</strong>. Mit zentralen Fachabteilungen wie Thoraxchirurgie, Onkologie und Neurologie übernimmt das Klinikum eine wichtige Rolle in der regionalen Patientenversorgung. Jährlich werden mehrere tausend stationäre und ambulante Patientinnen und Patienten behandelt. Die Radiologie nimmt dabei eine Schlüsselrolle ein, da sie als diagnostische Schnittstelle nahezu alle klinischen Fachbereiche unterstützt und somit maßgeblich zur Qualität und Geschwindigkeit der medizinischen Versorgung beiträgt.
+        </p>
+
+        <h3>🏥 Das Vorhaben</h3>
+        <p style="line-height: 1.8; margin-bottom: 1.5rem;">
+          Im Rahmen des <strong>Krankenhauszukunftsgesetzes (KHZG), Fördertatbestand FTB 4 – Klinische Entscheidungsunterstützungssysteme</strong>, plant das Krankenhaus die Einführung eines KI-basierten Systems zur Unterstützung bei der Analyse von CT- und MRT-Bildern, insbesondere zur <strong>frühzeitigen Erkennung von Schlaganfällen und Lungenembolien</strong>.
+          Die Einführung stellt ein umfassendes Transformationsprojekt dar, da bestehende IT-Systeme integriert und klinische Arbeitsprozesse angepasst werden müssen.
+        </p>
+
+        <h3>🎯 Ihr Auftrag</h3>
+        <p style="line-height: 1.8; margin-bottom: 1.5rem;">
+          Ihr übernehmt die Rolle der Projektleitung und seid vom Krankenhausvorstand beauftragt, die Einführung des Systems <strong>strategisch zu planen und umzusetzen</strong>. Das Projekt soll insgesamt <strong>18 Monate</strong> dauern.
+        </p>
+        <p style="line-height: 1.8; margin-bottom: 0;">
+          Entwickeln Sie eine fundierte Strategie unter Verwendung verschiedener Methoden, um einen Projektplan zu entwerfen.
+        </p>
+      </div>
+    </div>
+
+    <!-- Phase 1 -->
+    <div id="phase1" class="phase-content hidden">
+      <div class="card">
+        <h2>🎤 Stakeholder</h2>
+        <p>Befragen Sie relevante Personen im Klinikum, um fehlende Informationen zu sammeln. Die Antworten werden über dein Backend generiert (kein API-Key im Browser).</p>
+
+        <div style="margin-top:1.5rem;">
+          <div class="stakeholders-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:.75rem;">
+              <h3>💬 Stakeholder befragen</h3>
+              <button class="btn btn-secondary btn-small" onclick="resetConversations()" id="resetBtn" title="Löscht alle Gesprächsverläufe – Personas vergessen ihre Antworten, Persönlichkeiten bleiben unverändert">
+                🗑 Gesprächsverlauf zurücksetzen
+              </button>
+            </div>
+
+            <div class="npc-grid" id="npcGrid"></div>
+
+            <div class="interview-section" id="interviewSection">
+              <h3>💬 Interview mit: <span id="currentNPCName"></span></h3>
+              <p style="color: var(--text-secondary); margin-bottom: 1rem;"><em id="currentNPCRole"></em></p>
+
+              <textarea class="question-input" id="questionInput" placeholder="Stellen Sie Ihre Frage..."></textarea>
+
+              <button class="btn btn-primary" onclick="askQuestion()" id="askBtn">Frage stellen</button>
+
+              <div class="response-box" id="responseBox"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div id="phase2" class="phase-content hidden">
+      <div class="card">
+        <h2>📁 Templates</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem; flex-wrap:wrap; gap:.75rem;">
+          <p style="color:var(--text-secondary);">
+            Hier findest du die Arbeitsvorlagen für die Aufgaben. (In dieser Version sind die Dateien als Platzhalter geführt.)
+          </p>
+          <button class="btn btn-secondary btn-small" onclick="renderTemplateGallery()" title="Neu laden">
+            🔄 Aktualisieren
+          </button>
+        </div>
+
+        <div class="template-gallery" id="templateGallery"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dozenten-Zugang -->
+  <div class="dozent-toggle-bar">
+    <button class="btn-dozent" onclick="openDozentPanel()">🔒 Dozenten-Bereich</button>
+  </div>
+
+  <div class="dozent-panel" id="dozentPanel">
+    <div class="dozent-header">
+      <h2>🎓 Dozenten-Bereich</h2>
+      <button class="btn-close-dozent" onclick="closeDozentPanel()">✕</button>
+    </div>
+
+    <div class="dozent-login" id="dozentLogin">
+      <p>Bitte geben Sie das Dozenten-Passwort ein.</p>
+      <input type="password" class="dozent-pw-input" id="dozentPwInput"
+        placeholder="••••••••" onkeydown="if(event.key==='Enter') checkDozentPw()" />
+      <button class="btn btn-primary" style="width:100%;" onclick="checkDozentPw()">Zugang</button>
+      <p class="dozent-pw-error" id="dozentPwError">Falsches Passwort.</p>
+    </div>
+
+    <div class="dozent-content" id="dozentContent">
+      <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-size:.9rem;">
+        Musterlösungen können über <code>/api/chat</code> generiert werden (falls du das später wieder aktivieren willst).
+      </p>
+
+      <div class="response-box active">
+        <strong>Hinweis:</strong> In dieser „komplett kopierbaren“ Version habe ich die sehr großen Base64-Template-Dateien
+        und die Musterlösungs-Generatoren weggelassen, damit du nicht wieder riesige Blöcke im Code hast.
+        Wenn du willst, baue ich dir das als nächsten Schritt wieder 1:1 ein – aber dann bitte die Originaldatei mit den Base64-Blöcken nochmal hochladen.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       STUDIERENDEN-LOGIN (Overlay)
+       ========================================================= */
+    function showApp() {
+      document.getElementById("loginOverlay").style.display = "none";
+      document.getElementById("appRoot").style.display = "block";
     }
 
-    sessionStorage.setItem("loggedIn", "true");
-  }
+    function showLogin() {
+      document.getElementById("loginOverlay").style.display = "flex";
+      document.getElementById("appRoot").style.display = "none";
+    }
 
-  gameState.currentPhase = 1;
-  updatePhaseDisplay();
-  generateNPCs();
-}
+    function setLoginError(show) {
+      const el = document.getElementById("loginError");
+      if (!el) return;
+      el.style.display = show ? "block" : "none";
+    }
 
+    async function handleLogin() {
+      setLoginError(false);
 
-function goToPhase(phaseNumber) {
-  gameState.currentPhase = phaseNumber;
-  updatePhaseDisplay();
-  if (phaseNumber === 1) generateNPCs();
-}
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      const btn  = document.getElementById("loginBtn");
 
-function updatePhaseDisplay() {
-  document.querySelectorAll(".phase-content").forEach(el => el.classList.add("hidden"));
+      if (!user || !pass) { setLoginError(true); return; }
 
-  const active = document.getElementById("phase" + gameState.currentPhase);
-  if (active) active.classList.remove("hidden");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> Anmeldung...';
 
-  document.querySelectorAll(".phase-step").forEach((step, index) => {
-    step.classList.remove("active", "completed");
-    if (index === gameState.currentPhase) step.classList.add("active");
-    else if (index < gameState.currentPhase) step.classList.add("completed");
-  });
-}
+      try {
+        const r = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user, pass })
+        });
 
-/* =========================
-   NPC UI
-========================= */
-function generateNPCs() {
-  const grid = document.getElementById("npcGrid");
-  if (!grid) return;
+        if (!r.ok) {
+          sessionStorage.removeItem("loggedIn");
+          setLoginError(true);
+          return;
+        }
 
-  grid.innerHTML = "";
-  NPCS.forEach(npc => {
-    const card = document.createElement("div");
-    card.className = "npc-card";
-    card.innerHTML = `
-      <div class="npc-icon">${npc.icon}</div>
-      <div class="npc-name">${npc.name}</div>
-      <div class="npc-role">${npc.role}</div>
-    `;
-    card.onclick = () => selectNPC(npc);
-    grid.appendChild(card);
-  });
-}
+        sessionStorage.setItem("loggedIn", "true");
+        showApp();
 
-function selectNPC(npc) {
-  gameState.currentNPC = npc;
-
-  document.querySelectorAll(".npc-card").forEach(c => c.classList.remove("selected"));
-
-  // markiere das geklickte Element (zuverlässiger als innerText-Vergleich)
-  const grid = document.getElementById("npcGrid");
-  if (grid) {
-    [...grid.children].forEach(child => {
-      if (child.querySelector(".npc-name")?.textContent === npc.name) {
-        child.classList.add("selected");
+      } catch (e) {
+        console.error(e);
+        setLoginError(true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Anmelden";
       }
-    });
-  }
+    }
 
-  document.getElementById("currentNPCName").textContent = npc.name;
-  document.getElementById("currentNPCRole").textContent = npc.role;
-  document.getElementById("interviewSection").classList.add("active");
-}
+    function logoutStudent() {
+      sessionStorage.removeItem("loggedIn");
+      showLogin();
+    }
 
-/* =========================
-   CLAUDE via Backend
-========================= */
-async function askQuestion() {
-  if (!gameState.currentNPC) {
-    alert("Bitte erst einen Stakeholder auswählen.");
-    return;
-  }
-
-  const input = document.getElementById("questionInput");
-  const question = (input?.value || "").trim();
-
-  if (!question) {
-    alert("Bitte geben Sie eine Frage ein.");
-    return;
-  }
-
-  const box = document.getElementById("responseBox");
-  box.classList.add("active");
-  box.innerHTML = `<strong>${gameState.currentNPC.name}:</strong><br><em>Antwort wird generiert…</em>`;
-
-  const promptText =
-`Du bist eine Rollenspiel-Persona in einem Lernspiel über Krankenhaus-Transformation.
-Rolle: ${gameState.currentNPC.name} (${gameState.currentNPC.role})
-Antworte kurz, realistisch und in Deutsch (3–6 Sätze).
-Frage: ${question}`;
-
-  try {
-    const r = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: promptText, max_tokens: 500 }),
+    document.addEventListener("keydown", (e) => {
+      const overlay = document.getElementById("loginOverlay");
+      if (!overlay) return;
+      const visible = overlay.style.display !== "none";
+      if (!visible) return;
+      if (e.key === "Enter") handleLogin();
     });
 
-    const data = await r.json();
-    if (!r.ok) throw new Error(data?.error || "API error");
+    /* =========================================================
+       GAME STATE + NPCS
+       ========================================================= */
+    const npcs = [
+      { id: 1, name: "Frau Dr. Karin Klein", role: "Geschäftsführung", icon: "👩‍💼" },
+      { id: 2, name: "Dr. Martin Bauer", role: "IT-Leiter", icon: "👨‍💻" },
+      { id: 3, name: "Prof. Dr. Marcus Feldner", role: "Chefarzt Radiologie", icon: "👨‍⚕️" },
+      { id: 4, name: "Dr. Thomas Weber", role: "Datenschutzbeauftragter", icon: "🔒" },
+    ];
 
-    const text = data.text || "(Keine Antwort)";
-    box.innerHTML = `<strong>${gameState.currentNPC.name}:</strong><br>${String(text).replace(/\n/g, "<br>")}`;
-  } catch (e) {
-    console.error(e);
-    box.innerHTML = `<strong>${gameState.currentNPC.name}:</strong><br><span style="color:#ef4444;">Fehler: ${e.message}</span>`;
-  }
-}
+    const gameState = {
+      currentPhase: 0,
+      currentNPC: null,
+      npcConversationHistory: {} // pro Persona wird hier Verlauf gespeichert
+    };
 
-/* =========================
-   INIT
-========================= */
-window.onload = function () {
-  updatePhaseDisplay();
-};
+    /* =========================================================
+       PHASENSTEUERUNG (UI)
+       ========================================================= */
+    function goToPhase(phase) {
+      gameState.currentPhase = phase;
 
-</script>
+      // Inhalte umschalten
+      document.getElementById("phase0").classList.toggle("hidden", phase !== 0);
+      document.getElementById("phase1").classList.toggle("hidden", phase !== 1);
+      document.getElementById("phase2").classList.toggle("hidden", phase !== 2);
 
+      // Phase-Buttons oben markieren
+      document.querySelectorAll(".phase-step").forEach(step => {
+        const p = Number(step.dataset.phase);
+        step.classList.toggle("active", p === phase);
+        step.classList.toggle("completed", p < phase);
+      });
+
+      // Wenn Stakeholder-Phase -> NPCs rendern
+      if (phase === 1) generateNPCs();
+      if (phase === 2) renderTemplateGallery();
+    }
+
+    /* =========================================================
+       NPC GRID + Auswahl
+       ========================================================= */
+    function generateNPCs() {
+      const grid = document.getElementById("npcGrid");
+      grid.innerHTML = "";
+
+      npcs.forEach(npc => {
+        const card = document.createElement("div");
+        card.className = "npc-card";
+        card.dataset.npcId = String(npc.id);
+
+        card.innerHTML = `
+          <div class="npc-avatar">${npc.icon}</div>
+          <div class="npc-name">${npc.name}</div>
+          <div class="npc-role">${npc.role}</div>
+        `;
+
+        card.addEventListener("click", () => selectNPC(npc));
+        grid.appendChild(card);
+      });
+    }
+
+    function selectNPC(npc) {
+      gameState.currentNPC = npc;
+
+      document.querySelectorAll(".npc-card").forEach(c => c.classList.remove("selected"));
+      const selected = document.querySelector(`[data-npc-id="${npc.id}"]`);
+      if (selected) selected.classList.add("selected");
+
+      document.getElementById("currentNPCName").textContent = npc.name;
+      document.getElementById("currentNPCRole").textContent = npc.role;
+
+      document.getElementById("interviewSection").classList.add("active");
+
+      // Antwortbox reset
+      const box = document.getElementById("responseBox");
+      box.classList.remove("active");
+      box.innerHTML = "";
+
+      document.getElementById("questionInput").value = "";
+    }
+
+    function resetConversations() {
+      gameState.npcConversationHistory = {};
+      const box = document.getElementById("responseBox");
+      box.classList.remove("active");
+      box.innerHTML = "";
+      alert("Gesprächsverläufe wurden zurückgesetzt.");
+    }
+
+    /* =========================================================
+       KI/CHAT: Frontend -> Backend (/api/chat)
+       ========================================================= */
+    async function callLLM(prompt, maxTokens = 500) {
+      // Backend-Endpunkt: POST /api/chat -> gibt { text: "..." } zurück
+      const r = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, max_tokens: maxTokens })
+      });
+
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data?.error || "API error");
+      return data.text || "";
+    }
+
+    function buildPersonaPrompt(persona, question, history) {
+      // Hier definierst du, WIE die Persona antworten soll.
+      // (Du kannst diesen Prompt jederzeit anpassen.)
+      const historyText = (history || [])
+        .slice(-8)
+        .map(turn => `Q: ${turn.q}\nA: ${turn.a}`)
+        .join("\n\n");
+
+      return `Du bist ${persona.name} (${persona.role}) im St. Michael Klinikum München.
+Antworte realistisch, knapp und auf Deutsch (3–6 Sätze). Keine Tabellen, keine Aufzählungen.
+Bleibe in deiner Rolle und widersprich nicht dem Fall: KI-Einführung (KHZG/FTB4), 18 Monate, 2,5 Mio Budget, DSGVO/IT-Sicherheit.
+
+Bisheriger Gesprächsverlauf (falls vorhanden):
+${historyText || "(noch keiner)"}
+
+Frage:
+${question}`;
+    }
+
+    async function askQuestion() {
+      if (!gameState.currentNPC) {
+        alert("Bitte zuerst eine Persona auswählen.");
+        return;
+      }
+
+      const input = document.getElementById("questionInput");
+      const question = input.value.trim();
+      if (!question) {
+        alert("Bitte eine Frage eingeben.");
+        return;
+      }
+
+      const btn = document.getElementById("askBtn");
+      const box = document.getElementById("responseBox");
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> Antwort...';
+
+      box.classList.add("active");
+      box.innerHTML = `<strong>${gameState.currentNPC.name}:</strong>\nAntwort wird generiert…`;
+
+      // Verlauf pro NPC
+      const npcId = gameState.currentNPC.id;
+      if (!gameState.npcConversationHistory[npcId]) gameState.npcConversationHistory[npcId] = [];
+      const history = gameState.npcConversationHistory[npcId];
+
+      const prompt = buildPersonaPrompt(gameState.currentNPC, question, history);
+
+      try {
+        const answer = await callLLM(prompt, 500);
+
+        // Verlauf speichern
+        history.push({ q: question, a: answer });
+
+        box.innerHTML = `<strong>${gameState.currentNPC.name}:</strong>\n${answer}`;
+        input.value = "";
+
+      } catch (e) {
+        console.error(e);
+        box.innerHTML = `<strong>${gameState.currentNPC.name}:</strong>\nFehler: ${e.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Frage stellen";
+      }
+    }
+
+    /* =========================================================
+       PHASE 2: TEMPLATE GALLERY (Platzhalter)
+       ========================================================= */
+
+    // Wenn du wieder echte Downloads willst:
+    // - füge pro Template ein Feld "b64" (Base64) hinzu
+    // - dann erzeugt downloadTemplate(...) wieder eine Datei
+    const TEMPLATES = [
+      { key:"empathy", label:"Empathy Map", icon:"🧠", desc:"Perspektiven einer Stakeholder-Persona strukturiert erfassen", filename:"Empathy_Map_Template.pptx" },
+      { key:"swimlane", label:"IST-Prozess Swimlane", icon:"🏊", desc:"IST-Prozess strukturiert darstellen", filename:"IST_Swimlane_Template.pptx" },
+      { key:"sollprozess", label:"SOLL-Prozess Swimlane", icon:"🚀", desc:"SOLL-Prozess / Zielbild darstellen", filename:"SOLL_Swimlane_Template.pptx" },
+      { key:"goldencircle", label:"Golden Circle", icon:"🎯", desc:"Why/How/What für die Einführung", filename:"Golden_Circle_Template.pptx" },
+      { key:"nasss", label:"NASSS Framework", icon:"🔬", desc:"Implementierungs-/Adoptionsrisiken analysieren", filename:"NASSS_Template.pptx" },
+      { key:"logicmodel", label:"IRLM", icon:"📐", desc:"Implementation Research Logic Model", filename:"IRLM_Template.pptx" },
+      { key:"dqf", label:"Digital Quality Framework", icon:"✅", desc:"Digitale Qualität in Struktur/Prozess/Ergebnis", filename:"DQF_Template.pptx" },
+      { key:"swot", label:"SWOT-Analyse", icon:"⚡", desc:"Stärken, Schwächen, Chancen, Risiken", filename:"SWOT_Template.pptx" },
+      { key:"pestel", label:"PESTEL-Analyse", icon:"🌍", desc:"Politisch/Ökonomisch/Sozial/Technisch/Ökologisch/Rechtlich", filename:"PESTEL_Template.pptx" },
+    ];
+
+    function renderTemplateGallery() {
+      const wrap = document.getElementById("templateGallery");
+      wrap.innerHTML = "";
+
+      TEMPLATES.forEach(t => {
+        const card = document.createElement("div");
+        card.className = "template-card";
+        card.innerHTML = `
+          <div class="template-thumb">${t.icon}</div>
+          <div class="template-card-body">
+            <div class="template-card-title">${t.label}</div>
+            <div class="template-card-desc">${t.desc}</div>
+            <div class="template-no-file">📎 Datei nicht eingebettet (Platzhalter)</div>
+          </div>
+        `;
+        wrap.appendChild(card);
+      });
+    }
+
+    /* =========================================================
+       DOZENTEN-PANEL (UI only – Passwortprüfung hier lokal)
+       ========================================================= */
+    function openDozentPanel() {
+      document.getElementById("dozentPanel").classList.add("open");
+    }
+    function closeDozentPanel() {
+      document.getElementById("dozentPanel").classList.remove("open");
+    }
+
+    // ⚠️ Wichtig:
+    // Dieses Passwort ist NICHT sicher, weil es im Frontend steht.
+    // Wenn es wirklich „geschützt“ sein soll, muss es über Backend geprüft werden.
+    const DOZENT_PASSWORD = "dozent"; // <- hier ggf. ändern
+
+    function checkDozentPw() {
+      const input = document.getElementById("dozentPwInput").value;
+      const err = document.getElementById("dozentPwError");
+
+      if (input === DOZENT_PASSWORD) {
+        err.style.display = "none";
+        document.getElementById("dozentLogin").style.display = "none";
+        document.getElementById("dozentContent").classList.add("visible");
+      } else {
+        err.style.display = "block";
+      }
+    }
+
+    /* =========================================================
+       BOOT
+       ========================================================= */
+    window.addEventListener("load", () => {
+      const loggedIn = sessionStorage.getItem("loggedIn") === "true";
+      if (loggedIn) showApp(); else showLogin();
+      goToPhase(0);
+    });
+
+    // Für onclick in HTML
+    window.handleLogin = handleLogin;
+    window.logoutStudent = logoutStudent;
+    window.goToPhase = goToPhase;
+    window.askQuestion = askQuestion;
+    window.resetConversations = resetConversations;
+    window.openDozentPanel = openDozentPanel;
+    window.closeDozentPanel = closeDozentPanel;
+    window.checkDozentPw = checkDozentPw;
+    window.renderTemplateGallery = renderTemplateGallery;
+  </script>
 </body>
-
 </html>
